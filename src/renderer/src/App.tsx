@@ -1550,7 +1550,7 @@ function App() {
     seekAbs(time);
   }, [findNearestKeyFrameTime, getRelevantTime, seekAbs]);
 
-  const { viewportRef: videoZoomRef, transform: videoTransform } = useVideoZoom(filePath);
+  const { viewportRef: videoZoomRef, transform: videoTransform, cursor: videoCursor } = useVideoZoom(filePath);
   const onTimelineWheel = useTimelineScroll({ wheelSensitivity, mouseWheelZoomModifierKey, mouseWheelFrameSeekModifierKey, mouseWheelKeyframeSeekModifierKey, invertTimelineScroll, zoomRel, seekRel, shortStep, seekClosestKeyframe });
 
   const seekAccelerationRef = useRef(1);
@@ -2508,7 +2508,7 @@ function App() {
                 <div style={{ position: 'relative', flexGrow: 1, overflow: 'hidden' }} ref={videoContainerRef}>
                   {!isFileOpened && <NoFileLoaded mifiLink={mifiLink} currentCutSeg={currentCutSeg} onClick={openFilesDialog} darkMode={darkMode} keyBindingByAction={keyBindingByAction} />}
 
-                  <div ref={videoZoomRef} className="no-user-select" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', visibility: !isFileOpened || !hasVideo || bigWaveformEnabled ? 'hidden' : undefined }}>
+                  <div ref={videoZoomRef} className="no-user-select" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', cursor: videoCursor, touchAction: 'none', visibility: !isFileOpened || !hasVideo || bigWaveformEnabled ? 'hidden' : undefined }}>
                     <div style={{ width: '100%', height: '100%', transform: videoTransform, transformOrigin: '0 0' }}>
                       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                       <video

@@ -38,8 +38,70 @@ export default function useVideoZoom(filePath: string | undefined) {
     return () => viewport.removeEventListener('wheel', onWheel);
   }, [filePath]);
 
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (viewport == null || filePath == null || zoom.scale <= 1) return undefined;
+    let drag: { id: number, x: number, y: number } | undefined;
+    let moved = false;
+    viewport.style.cursor = 'grab';
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (!event.isPrimary || event.button !== 0) return;
+      drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      moved = false;
+    };
+    const endDrag = () => {
+      if (drag && viewport.hasPointerCapture(drag.id)) viewport.releasePointerCapture(drag.id);
+      drag = undefined;
+      viewport.style.cursor = 'grab';
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      if ((event.buttons & 1) === 0) { endDrag(); return; }
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      if (!moved && Math.hypot(dx, dy) < 4) return;
+      const { width, height } = viewport.getBoundingClientRect();
+      if (width === 0 || height === 0) return;
+      moved = true;
+      viewport.setPointerCapture(event.pointerId);
+      viewport.style.cursor = 'grabbing';
+      drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      setZoom((previous) => ({
+        ...previous,
+        x: Math.min(0, Math.max(1 - previous.scale, previous.x + dx / width)),
+        y: Math.min(0, Math.max(1 - previous.scale, previous.y + dy / height)),
+      }));
+    };
+    const suppressDragClick = (event: MouseEvent) => {
+      if (!moved) return;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    viewport.addEventListener('pointerdown', onPointerDown);
+    viewport.addEventListener('pointermove', onPointerMove);
+    viewport.addEventListener('pointerup', endDrag);
+    viewport.addEventListener('pointercancel', endDrag);
+    viewport.addEventListener('lostpointercapture', endDrag);
+    viewport.addEventListener('click', suppressDragClick, true);
+    viewport.addEventListener('dblclick', suppressDragClick, true);
+    return () => {
+      endDrag();
+      viewport.style.cursor = '';
+      viewport.removeEventListener('pointerdown', onPointerDown);
+      viewport.removeEventListener('pointermove', onPointerMove);
+      viewport.removeEventListener('pointerup', endDrag);
+      viewport.removeEventListener('pointercancel', endDrag);
+      viewport.removeEventListener('lostpointercapture', endDrag);
+      viewport.removeEventListener('click', suppressDragClick, true);
+      viewport.removeEventListener('dblclick', suppressDragClick, true);
+    };
+  }, [filePath, zoom.scale]);
+
   return {
     viewportRef,
+    cursor: zoom.scale > 1 ? 'grab' : undefined,
     transform: `translate(${zoom.x * 100}%, ${zoom.y * 100}%) scale(${zoom.scale})`,
   };
 }
