@@ -57,7 +57,7 @@ export default function useVideoZoom(filePath: string | undefined) {
     };
     const onPointerMove = (event: PointerEvent) => {
       if (!drag || event.pointerId !== drag.id) return;
-      if ((event.buttons & 1) === 0) { endDrag(); return; }
+      if ((event.buttons & 1) === 0) { endDrag(); return; } // eslint-disable-line no-bitwise -- buttons is a bitmask and may include multiple pressed buttons.
       const dx = event.clientX - drag.x;
       const dy = event.clientY - drag.y;
       if (!moved && Math.hypot(dx, dy) < 4) return;
