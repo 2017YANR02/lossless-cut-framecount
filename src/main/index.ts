@@ -173,7 +173,7 @@ function createWindow() {
 
   attachContextMenu(mainWindow);
 
-  if (isDev) mainWindow.loadURL('http://localhost:3001');
+  if (isDev) mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] ?? 'http://localhost:3001');
   // Need to useloadFile for special characters https://github.com/mifi/lossless-cut/issues/40
   else mainWindow.loadFile('out/renderer/index.html');
 
